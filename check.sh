@@ -50,7 +50,6 @@ process_line() {
   
   # Bit cludgy, but if the process time is less than now its going to happen tomorrow
   when=$( [ "$hour$minutes" -lt "$CURRENT_HOUR$CURRENT_MIN" ] && echo "tomorrow" || echo "today" )
-  # echo "$hour:$minutes $when - $process";
   printf "%d:%02d %s - %s" $hour $minutes $when $process
 }
 
