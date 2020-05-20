@@ -18,8 +18,10 @@ if ! [[ ${TIME[1]} =~ $IS_DIGIT ]] ; then
    echo "Error: Minutes not a number, valid range is (00..59)" >&2; exit 1;
 fi
 
-CURRENT_MIN=${TIME[1]};
-CURRENT_HOUR=${TIME[0]};
+# Sanitize input and remove any leading zeros
+CURRENT_MIN=$(expr ${TIME[1]} + 0);
+CURRENT_HOUR=$(expr ${TIME[0]} + 0);
+MAX_HOUR_ROLLOVER=24;
 
 process_line() {
   # Replace wildcards with dash since bash doesn't play well with
@@ -29,37 +31,27 @@ process_line() {
   minutes="${args[0]}";
   hour="${args[1]}";
   process="${args[2]}";
-  when="today"
 
-  if [ $minutes = "-" ]; then
-    # If we don't have a wildcard hour, then zero minutes
-    if [ $hour != "-" ]; then 
+  if [ $minutes = "-" ]; then 
+    if [ $hour != "-" ] && [ $hour != $CURRENT_HOUR ]; then
       minutes="00";
     else 
-      minutes="$CURRENT_MIN"
+      minutes="$CURRENT_MIN";
     fi
   fi
 
   if [ $hour = "-" ]; then
-    # We missed the non-wildcard minute - increment the hour
-    if [ $CURRENT_MIN -gt $minutes ]; then
-      hour=$(($CURRENT_HOUR + 1 % ))
+    if [ $minutes -lt $CURRENT_MIN ]; then 
+      hour="$(( ( $CURRENT_HOUR + 1 ) % MAX_HOUR_ROLLOVER ))";
     else
       hour="$CURRENT_HOUR";
     fi
   fi
   
-  # We've rolled over hours, set them to 00
-  if [ $hour -gt 23 ]; then
-    when="tomorrow";
-    hour="00";
-  fi
-
-  if [ $CURRENT_HOUR -gt $hour ]; then
-    when="tomorrow";
-  fi
-  
-  echo "$hour:$minutes $when - $process";
+  # Bit cludgy, but if the process time is less than now its going to happen tomorrow
+  when=$( [ "$hour$minutes" -lt "$CURRENT_HOUR$CURRENT_MIN" ] && echo "tomorrow" || echo "today" )
+  # echo "$hour:$minutes $when - $process";
+  printf "%d:%02d %s - %s" $hour $minutes $when $process
 }
 
 if test ! -t 0; then
@@ -68,6 +60,6 @@ if test ! -t 0; then
     # printf '%s\n' "$line"
   done
 else 
-  echo "No data provided, data should be passed through STDIN";
+  echo "No data passed with STDIN";
   exit 1;
 fi
