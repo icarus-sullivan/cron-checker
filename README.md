@@ -1,7 +1,7 @@
 
 # Usage 
 
-To check upcoming cron jobs pipe properly formatted configuration to the script through STDIN. Additionally provide a single argument non-namespaced for the given time of day you are querying. 
+To check upcoming cron jobs, pipe properly formatted configuration to the `check.sh` script. Additionally provide a single argument non-namespaced for the given time of day you are querying. 
 
 
 Example:
@@ -40,7 +40,7 @@ echo "* 0 /bin/test" | ./check.sh 23:59 # max
 
 ## Tests
 
-There are some cursory tests provided, to run them run the following command:
+There are some cursory tests provided, to run invoke this script:
 
 ```bash
 ./test.sh
